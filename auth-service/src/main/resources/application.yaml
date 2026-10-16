@@ -1,0 +1,51 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: auth
+    password: auth
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        # колонки created_at / expires_at — TIMESTAMP без зоны, храним в UTC
+        jdbc.time_zone: UTC
+        type.preferred_instant_jdbc_type: TIMESTAMP
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+jwt:
+  # Base64-ключ HMAC-SHA256 (минимум 256 бит). В проде обязательно переопределить через JWT_SECRET.
+  # Этот же секрет должны использовать остальные микросервисы для проверки access-токенов.
+  secret: ${JWT_SECRET:c21hcnRydWJsZS1hdXRoLXNlcnZpY2UtZGV2LXNlY3JldC1rZXktY2hhbmdlLW1lLWluLXByb2Q=}
+  issuer: ${JWT_ISSUER:smartruble-auth-service}
+  access-token-expiration: ${JWT_ACCESS_TTL:15m}
+  refresh-token-expiration: ${JWT_REFRESH_TTL:30d}
+
+# Администратор, создаваемый при первом старте (если его ещё нет)
+app:
+  admin:
+    enabled: ${ADMIN_INIT_ENABLED:true}
+    phone-number: ${ADMIN_PHONE:+70000000000}
+    email: ${ADMIN_EMAIL:admin@smartruble.local}
+    password: ${ADMIN_PASSWORD:admin12345}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

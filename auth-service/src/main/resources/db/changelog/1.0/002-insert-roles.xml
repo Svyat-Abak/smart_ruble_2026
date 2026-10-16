@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Роли приложения. Должны совпадать с enum com.smartruble.authservice.entity.RoleName -->
+    <changeSet id="1.0-002-roles" author="auth-service">
+        <insert tableName="roles"><column name="name" value="ROLE_EMPLOYEE"/></insert>
+        <insert tableName="roles"><column name="name" value="ROLE_MANAGER"/></insert>
+        <insert tableName="roles"><column name="name" value="ROLE_FINANCE_DIRECTOR"/></insert>
+        <insert tableName="roles"><column name="name" value="ROLE_ADMIN"/></insert>
+    </changeSet>
+</databaseChangeLog>

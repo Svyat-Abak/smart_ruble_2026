@@ -1,0 +1,36 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build: .
+    container_name: auth-service
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://auth-db:5432/auth_db
+      DB_USERNAME: auth
+      DB_PASSWORD: auth
+      JWT_SECRET: ${JWT_SECRET:-c21hcnRydWJsZS1hdXRoLXNlcnZpY2UtZGV2LXNlY3JldC1rZXktY2hhbmdlLW1lLWluLXByb2Q=}
+      ADMIN_PHONE: ${ADMIN_PHONE:-+70000000000}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+    ports:
+      - "8081:8081"
+
+volumes:
+  auth-db-data:
