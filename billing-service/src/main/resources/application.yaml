@@ -1,0 +1,31 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: billing-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/billing_db
+    username: billing
+    password: billing
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # схему создаёт только Liquibase, Hibernate лишь сверяет
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,modulith

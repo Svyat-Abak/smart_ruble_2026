@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Миграции каждого модуля лежат в своей папке: accounts/, catalog/, invoicing/, payments/.
+         Подключайте их сюда по мере появления, например:
+         <include file="db/changelog/accounts/001-create-utility-accounts.xml"/> -->
+</databaseChangeLog>
