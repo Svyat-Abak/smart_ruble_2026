@@ -24,17 +24,47 @@ services:
       auth-db:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:postgresql://auth-db:5432/auth_db
-      DB_USERNAME: auth
-      DB_PASSWORD: auth
+      # Стандартные переменные Spring: перекрывают spring.datasource.* из application.yaml
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: auth
+      SPRING_DATASOURCE_PASSWORD: auth
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
+    # порт наружу не публикуем — доступ только через api-gateway
+
+  billing-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: billing_db
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: billing
+    ports:
+      - "5434:5432"          # для pgAdmin
+    volumes:
+      - billing-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing -d billing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  billing-service:
+    build: ./billing-service
+    depends_on:
+      billing-db:
+        condition: service_healthy
+    environment:
+      # Стандартные переменные Spring: перекрывают spring.datasource.* из application.yaml
+      SPRING_DATASOURCE_URL: jdbc:postgresql://billing-db:5432/billing_db
+      SPRING_DATASOURCE_USERNAME: billing
+      SPRING_DATASOURCE_PASSWORD: billing
     # порт наружу не публикуем — доступ только через api-gateway
 
   api-gateway:
     build: ./api-gateway
     depends_on:
       - auth-service
+      - billing-service
     environment:
       AUTH_SERVICE_URL: http://auth-service:8081
       BILLING_SERVICE_URL: http://billing-service:8082
@@ -46,3 +76,4 @@ services:
 
 volumes:
   auth-db-data:
+  billing-db-data:

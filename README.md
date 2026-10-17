@@ -6,7 +6,7 @@
 |---|---|---|---|
 | [api-gateway](api-gateway) | 8080 | ✅ | единая точка входа: маршрутизация, проверка JWT, лимиты, CORS |
 | [auth-service](auth-service) | 8081 | ✅ | регистрация, вход, роли, выдача JWT |
-| billing-service | 8082 | ⏳ | лицевые счета, тарифы, начисления, платежи |
+| [billing-service](billing-service) | 8082 | 🚧 | лицевые счета, тарифы, начисления, платежи (модульный монолит) |
 | abs-service | 8083 | ⏳ | mock банковской системы |
 | integration-service | 8084 | ⏳ | ГИС ЖКХ, цифровой рубль, смарт-контракты |
 | notification-service | 8085 | ⏳ | push / email по событиям из Kafka |
@@ -22,12 +22,17 @@ docker compose up --build
 
 - API: http://localhost:8080
 - Swagger всех сервисов: http://localhost:8080/swagger-ui.html
-- PostgreSQL auth-service (для pgAdmin): `localhost:5433`, база `auth_db`, пользователь/пароль `auth`/`auth`
+- PostgreSQL для pgAdmin:
+  - auth-service: `localhost:5433`, база `auth_db`, пользователь/пароль `auth`/`auth`
+  - billing-service: `localhost:5434`, база `billing_db`, пользователь/пароль `billing`/`billing`
+
+Остановить: `docker compose down` (данные баз сохранятся в volume; `down -v` удалит их).
 
 ## Структура
 
 - `<service>/`: отдельный Spring Boot сервис со своим `pom.xml`, Dockerfile и README
 - `docs/adr/`: архитектурные решения
+- `docs/LEARNING_PLAN.md`: план обучения по этапам
 - `docker-compose.yml`: запуск всей системы
 
 ## Соглашения
