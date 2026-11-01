@@ -5,7 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Модульный монолит. Каждый прямой подпакет com.smartruble.billing — отдельный модуль
- * (accounts, catalog, invoicing, payments). Границы модулей проверяет ModularityTests.
+ * (counterparties, workorders, payments, rules, approvals, reporting). Границы модулей проверяет ModularityTests.
+ * Декомпозиция: docs/BILLING_DECOMPOSITION.md
  */
 @SpringBootApplication
 public class BillingServiceApplication {

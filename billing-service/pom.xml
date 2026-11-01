@@ -12,7 +12,7 @@
 	<artifactId>billing-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>billing-service</name>
-	<description>SmartRuble billing: лицевые счета, тарифы, начисления, платежи (модульный монолит)</description>
+	<description>SmartRuble billing: контроль расходов компании — контрагенты, распоряжения и бюджеты, платежи, правила (модульный монолит)</description>
 
 	<properties>
 		<java.version>21</java.version>

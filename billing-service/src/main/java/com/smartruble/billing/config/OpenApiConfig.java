@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(title = "SmartRuble Billing Service", version = "v1",
-                description = "Лицевые счета, тарифы, начисления и платежи"),
+                description = "Контроль расходов: контрагенты, распоряжения и бюджеты, платежи, правила, согласование"),
         // относительный адрес: Swagger "Try it out" работает и напрямую, и через api-gateway
         servers = @Server(url = "/"))
 public class OpenApiConfig {
