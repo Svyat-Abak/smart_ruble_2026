@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Модуль counterparties. Описание таблиц: docs/BILLING_DATABASE.md -->
+
+    <changeSet id="counterparties-001-counterparties" author="billing-service">
+        <createTable tableName="counterparties" remarks="Контрагенты: подрядчики и поставщики">
+            <column name="id" type="UUID"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="type" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="short_name" type="VARCHAR(255)"/>
+            <column name="inn" type="VARCHAR(12)"><constraints nullable="false"/></column>
+            <column name="kpp" type="VARCHAR(9)"/>
+            <column name="ogrn" type="VARCHAR(15)"/>
+            <column name="legal_address" type="VARCHAR(500)"/>
+            <column name="contact_email" type="VARCHAR(100)"/>
+            <column name="contact_phone" type="VARCHAR(20)"/>
+            <column name="verification_status" type="VARCHAR(20)" defaultValue="NEW"><constraints nullable="false"/></column>
+            <column name="created_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+            <column name="created_by" type="UUID"><constraints nullable="false"/></column>
+            <column name="updated_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0"><constraints nullable="false"/></column>
+        </createTable>
+        <sql>
+            ALTER TABLE counterparties
+                ADD CONSTRAINT ck_counterparties_type
+                    CHECK (type IN ('LEGAL_ENTITY', 'INDIVIDUAL_ENTREPRENEUR', 'SELF_EMPLOYED')),
+                ADD CONSTRAINT ck_counterparties_inn
+                    CHECK (inn ~ '^[0-9]{10}$' OR inn ~ '^[0-9]{12}$'),
+                ADD CONSTRAINT ck_counterparties_kpp
+                    CHECK (kpp IS NULL OR kpp ~ '^[0-9]{4}[0-9A-Z]{2}[0-9]{3}$'),
+                ADD CONSTRAINT ck_counterparties_ogrn
+                    CHECK (ogrn IS NULL OR ogrn ~ '^[0-9]{13}$' OR ogrn ~ '^[0-9]{15}$'),
+                ADD CONSTRAINT ck_counterparties_verification_status
+                    CHECK (verification_status IN ('NEW', 'VERIFIED', 'SUSPICIOUS', 'BLOCKED'));
+
+            -- у филиалов один ИНН, но разные КПП; COALESCE — чтобы NULL-КПП (ИП) тоже участвовал в уникальности
+            CREATE UNIQUE INDEX ux_counterparties_inn_kpp ON counterparties (inn, COALESCE(kpp, ''));
+            CREATE INDEX ix_counterparties_verification_status ON counterparties (verification_status);
+            CREATE INDEX ix_counterparties_name_lower ON counterparties (lower(name));
+        </sql>
+    </changeSet>
+
+    <changeSet id="counterparties-001-bank-accounts" author="billing-service">
+        <createTable tableName="counterparty_bank_accounts" remarks="Банковские счета контрагентов">
+            <column name="id" type="UUID"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="counterparty_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_cp_bank_accounts_counterparty"
+                             referencedTableName="counterparties" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="account_number" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="bik" type="VARCHAR(9)"><constraints nullable="false"/></column>
+            <column name="bank_name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="correspondent_account" type="VARCHAR(20)"/>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="created_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <sql>
+            ALTER TABLE counterparty_bank_accounts
+                ADD CONSTRAINT ck_cp_bank_accounts_account_number CHECK (account_number ~ '^[0-9]{20}$'),
+                ADD CONSTRAINT ck_cp_bank_accounts_bik CHECK (bik ~ '^[0-9]{9}$'),
+                ADD CONSTRAINT ck_cp_bank_accounts_corr_account
+                    CHECK (correspondent_account IS NULL OR correspondent_account ~ '^[0-9]{20}$'),
+                ADD CONSTRAINT ux_cp_bank_accounts_account UNIQUE (counterparty_id, bik, account_number);
+
+            -- не больше одного основного действующего счёта у контрагента
+            CREATE UNIQUE INDEX ux_cp_bank_accounts_primary
+                ON counterparty_bank_accounts (counterparty_id) WHERE is_primary AND active;
+        </sql>
+    </changeSet>
+
+    <changeSet id="counterparties-001-status-history" author="billing-service">
+        <createTable tableName="counterparty_status_history" remarks="История смены статуса проверки контрагента">
+            <column name="id" type="UUID"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="counterparty_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_cp_status_history_counterparty"
+                             referencedTableName="counterparties" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="old_status" type="VARCHAR(20)"/>
+            <column name="new_status" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="reason" type="VARCHAR(1000)"/>
+            <column name="source" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="changed_by" type="UUID"/>
+            <column name="changed_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <sql>
+            ALTER TABLE counterparty_status_history
+                ADD CONSTRAINT ck_cp_status_history_source CHECK (source IN ('MANUAL', 'FNS_CHECK')),
+                ADD CONSTRAINT ck_cp_status_history_new_status
+                    CHECK (new_status IN ('NEW', 'VERIFIED', 'SUSPICIOUS', 'BLOCKED')),
+                ADD CONSTRAINT ck_cp_status_history_old_status
+                    CHECK (old_status IS NULL OR old_status IN ('NEW', 'VERIFIED', 'SUSPICIOUS', 'BLOCKED'));
+            CREATE INDEX ix_cp_status_history_counterparty ON counterparty_status_history (counterparty_id, changed_at);
+        </sql>
+    </changeSet>
+
+    <changeSet id="counterparties-001-members" author="billing-service">
+        <createTable tableName="counterparty_members"
+                     remarks="Пользователи auth-service (ROLE_CONTRACTOR), работающие от имени контрагента">
+            <column name="counterparty_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_cp_members_counterparty"
+                             referencedTableName="counterparties" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_cp_members_user"/>
+            </column>
+            <column name="added_by" type="UUID"><constraints nullable="false"/></column>
+            <column name="added_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <addPrimaryKey tableName="counterparty_members" columnNames="counterparty_id, user_id"
+                       constraintName="pk_counterparty_members"/>
+    </changeSet>
+</databaseChangeLog>

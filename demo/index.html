@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ЦифроКонтроль — демо</title>
+<style>
+:root{
+  --bg:#f4f6fa; --card:#ffffff; --ink:#0f1b2d; --muted:#5f6b7d; --line:#e3e8f0;
+  --brand:#1d4ed8; --brand-soft:#e8efff; --good:#15803d; --good-soft:#e7f6ec;
+  --bad:#c62828; --bad-soft:#fdecec; --warn:#b45309; --warn-soft:#fff4e0;
+  --side:#0f1b2d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;font-weight:600}
+.btn{background:var(--brand);color:#fff}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.pulse{box-shadow:0 0 0 0 rgba(29,78,216,.5);animation:pulse 1.4s infinite}
+.btn.pressed{transform:scale(.96)}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(29,78,216,0)}100%{box-shadow:0 0 0 0 rgba(29,78,216,0)}}
+
+#app{display:grid;grid-template-columns:220px 1fr;height:calc(100% - 64px)}
+.side{background:var(--side);color:#c9d3e3;padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:17px;margin:0 6px 22px}
+.logo i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#22c55e);display:inline-block}
+.nav{padding:9px 10px;border-radius:8px;font-weight:500}
+.nav.on{background:rgba(255,255,255,.1);color:#fff}
+.side .foot{margin-top:auto;font-size:12px;color:#8a97ad;padding:0 6px}
+
+main{padding:20px 26px;overflow:hidden;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between}
+.top h1{font-size:20px;margin:0}
+.top .sub{color:var(--muted);font-size:13px}
+.user{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.user b{width:32px;height:32px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card h3{margin:0 0 10px;font-size:15px}
+.muted{color:var(--muted)}
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* login */
+.center{flex:1;display:grid;place-items:center}
+.login{width:400px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--muted)}
+.field div{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#fafbfd}
+
+/* smeta */
+.drop{border:2px dashed #c3cfe2;border-radius:12px;padding:22px;display:flex;align-items:center;gap:16px;background:#fafbfd}
+.file{width:44px;height:54px;border-radius:6px;background:#fee2e2;color:var(--bad);display:grid;place-items:center;font-weight:700;font-size:12px}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);min-height:20px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.tag.ai{background:var(--brand-soft);color:var(--brand)}
+.tag.good{background:var(--good-soft);color:var(--good)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* fund */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;font-size:14px}
+.kv span:nth-child(odd){color:var(--muted)}
+.rules{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.rules li{display:flex;gap:10px;align-items:flex-start}
+.rules li:before{content:"✓";color:var(--good);font-weight:700}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.ok-banner{background:var(--good-soft);color:var(--good);border-radius:10px;padding:12px 14px;font-weight:600}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi.good .v{color:var(--good)} .kpi.bad .v{color:var(--bad)}
+.dash{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;min-height:0}
+#graph svg{width:100%;height:auto;display:block}
+.node rect{rx:8}
+.node.appear{animation:fade .5s ease}
+.check{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.check div{display:flex;gap:10px;align-items:center}
+.check .ic{width:20px;text-align:center;font-weight:700}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #c3cfe2;border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.verdict{border-radius:10px;padding:10px 12px;font-weight:600}
+.verdict.good{background:var(--good-soft);color:var(--good)}
+.verdict.bad{background:var(--bad-soft);color:var(--bad)}
+.why{font-weight:400;color:var(--ink);margin-top:4px;font-size:13px}
+.pay-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pay-head .amt{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.feed{overflow:hidden;flex:1;min-height:0}
+.ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ev .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.ev .t{color:var(--muted);font-size:12px;flex:none;width:40px}
+.actions{display:flex;gap:8px;margin-top:10px}
+
+/* caption */
+#cap{position:fixed;left:0;right:0;bottom:0;height:64px;background:#0b1424;color:#fff;display:flex;align-items:center;gap:16px;padding:0 24px;z-index:5}
+#cap .n{background:var(--brand);border-radius:6px;padding:3px 9px;font-weight:700;font-size:13px;white-space:nowrap}
+#cap .tx{flex:1;font-size:15px}
+#cap .tx b{color:#9cc2ff}
+#cap .disc{font-size:11px;color:#7f8ba0;white-space:nowrap}
+#cursor{position:fixed;left:-40px;top:-40px;width:22px;height:22px;z-index:10;pointer-events:none;transition:left .8s cubic-bezier(.4,.1,.2,1),top .8s cubic-bezier(.4,.1,.2,1)}
+#cursor svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.ripple{position:fixed;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(29,78,216,.35);z-index:9;pointer-events:none;animation:rip .5s ease-out forwards}
+@keyframes rip{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+.toast{position:fixed;right:24px;bottom:84px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;z-index:6;animation:fade .3s}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="side">
+    <div class="logo"><i></i>ЦифроКонтроль</div>
+    <div class="nav" data-nav="contracts">Контракты</div>
+    <div class="nav" data-nav="dash">Граф денег</div>
+    <div class="nav" data-nav="events">События</div>
+    <div class="nav" data-nav="report">Отчёты</div>
+    <div class="foot">Кабинет заказчика<br>Контур банка · цифровой рубль</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="cap"><span class="n" id="capN">Демо</span><span class="tx" id="capT"></span><span class="disc">Данные условные, для показа логики</span><button class="btn" id="next" style="display:none">Далее ▶</button></div>
+<div id="cursor"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M3 2l14 8-6 1.6L8 18z" fill="#fff" stroke="#0f1b2d" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+
+<script>
+const AUTO = new URLSearchParams(location.search).has('autoplay');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const $ = s => document.querySelector(s);
+const main = $('#main');
+const rub = n => n.toLocaleString('ru-RU') + ' ₽';
+const mln = n => (n / 1e6).toLocaleString('ru-RU', {maximumFractionDigits: 2}) + ' млн ₽';
+
+function nav(key){ document.querySelectorAll('.nav').forEach(n => n.classList.toggle('on', n.dataset.nav === key)); }
+function caption(n, html){ $('#capN').textContent = n; $('#capT').innerHTML = html; }
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+
+async function moveCursor(el){
+  const r = el.getBoundingClientRect(), c = $('#cursor');
+  c.style.left = (r.left + r.width / 2 - 4) + 'px'; c.style.top = (r.top + r.height / 2 - 3) + 'px';
+  await sleep(900);
+  const rp = document.createElement('div'); rp.className = 'ripple';
+  rp.style.left = (r.left + r.width / 2) + 'px'; rp.style.top = (r.top + r.height / 2) + 'px';
+  document.body.appendChild(rp); setTimeout(() => rp.remove(), 600);
+}
+// В автопоказе «нажимает» курсор, вручную ждём клика пользователя.
+async function press(el, wait = 1200){
+  el.classList.add('pulse');
+  if (AUTO){ await sleep(wait); await moveCursor(el); el.classList.add('pressed'); await sleep(180); el.classList.remove('pulse', 'pressed'); return; }
+  await new Promise(r => el.addEventListener('click', r, {once: true}));
+  el.classList.remove('pulse');
+}
+// Пауза между шагами: в ручном режиме — кнопка «Далее».
+async function beat(ms){
+  if (AUTO) return sleep(ms);
+  const b = $('#next'); b.style.display = '';
+  await new Promise(r => b.addEventListener('click', r, {once: true}));
+  b.style.display = 'none';
+}
+
+const header = (title, sub) => `<div class="top"><div><h1>${title}</h1><div class="sub">${sub}</div></div><div class="user">ГКУ «Управление капстроительства» · Иванова Е.А.<b>ЕИ</b></div></div>`;
+
+/* ---------- 1. Вход ---------- */
+async function login(){
+  nav(''); caption('Шаг 0', 'Заказчик входит в <b>кабинет контроля</b>, развёрнутый в закрытом контуре банка');
+  main.innerHTML = `<div class="center fade"><div class="card login">
+    <h3 style="font-size:18px">Вход в кабинет заказчика</h3>
+    <p class="muted" style="margin-top:0">Контроль целевых средств на смарт-контрактах цифрового рубля</p>
+    <div class="field"><label>Организация</label><div>ГКУ «Управление капстроительства»</div></div>
+    <div class="field"><label>Сотрудник</label><div>Иванова Елена Андреевна · контрактный управляющий</div></div>
+    <button class="btn" id="go" style="width:100%">Войти</button></div></div>`;
+  await press($('#go'), 1800);
+}
+
+/* ---------- 2. Смета ---------- */
+const BUDGET = [
+  {key: 'mat', name: 'Материалы', limit: 2000000, paid: 1050000, stop: 0},
+  {key: 'tech', name: 'Техника и механизмы', limit: 800000, paid: 330000, stop: 0},
+  {key: 'pay', name: 'Оплата труда', limit: 1200000, paid: 300000, stop: 0},
+  {key: 'sub', name: 'Субподряд', limit: 800000, paid: 0, stop: 0},
+];
+async function smeta(){
+  nav('contracts'); caption('Шаг 1', '<b>Договор и смета.</b> Загружаем смету — локальная языковая модель раскладывает её на статьи с лимитами');
+  main.innerHTML = header('Новый контракт', 'Капитальный ремонт школы № 12 · 44-ФЗ') + `
+    <div class="card fade"><div class="drop"><div class="file">PDF</div>
+      <div style="flex:1"><b>Смета_ремонт_школы_12.pdf</b><div class="muted">Договор № 0412-КР и локальная смета · 38 страниц</div></div>
+      <button class="btn" id="up">Распознать смету</button></div>
+      <div class="log" id="log" style="margin-top:12px"></div></div>
+    <div id="tbl"></div>`;
+  await press($('#up'), 1500);
+  const log = $('#log');
+  for (const l of ['Читаю договор: стороны, предмет, цена 4 800 000 ₽…', 'Разбираю локальную смету: 214 позиций…', 'Группирую позиции по статьям расходов…', 'Готово: 4 статьи, сумма сходится с ценой контракта ✓']){
+    log.innerHTML += `<div class="fade">› ${l}</div>`; await sleep(AUTO ? 900 : 600);
+  }
+  $('#tbl').innerHTML = `<div class="card fade"><h3>Статьи расходов <span class="tag ai">распознано ИИ · проверьте</span></h3>
+    <table><tr><th>Статья</th><th>Что входит</th><th class="num">Лимит</th></tr>
+    <tr><td>Материалы</td><td class="muted">кирпич, смеси, кровля, кабель</td><td class="num">${rub(2000000)}</td></tr>
+    <tr><td>Техника и механизмы</td><td class="muted">аренда техники, леса</td><td class="num">${rub(800000)}</td></tr>
+    <tr><td>Оплата труда</td><td class="muted">бригады генподрядчика</td><td class="num">${rub(1200000)}</td></tr>
+    <tr><td>Субподряд</td><td class="muted">электромонтаж</td><td class="num">${rub(800000)}</td></tr>
+    <tr><th colspan="2">Итого</th><th class="num">${rub(4800000)}</th></tr></table>
+    <div class="actions"><button class="btn" id="ok">Утвердить смету</button><button class="btn ghost">Изменить вручную</button></div></div>`;
+  caption('Шаг 1', 'Решение принимает человек: заказчик <b>проверяет и утверждает</b> статьи. Без ИИ их можно завести вручную');
+  await press($('#ok'), 2600);
+}
+
+/* ---------- 3. Смарт-контракт ---------- */
+async function fund(){
+  caption('Шаг 2', '<b>Смарт-контракт.</b> Деньги уходят генподрядчику в цифровых рублях вместе с правилами из договора');
+  main.innerHTML = header('Перевод генподрядчику', 'Контракт № 0412-КР · смета утверждена') + `
+    <div class="grid2 fade">
+      <div class="card"><h3>Платёж</h3><div class="kv">
+        <span>Получатель</span><span>ООО «СтройМонтаж»</span>
+        <span>ИНН</span><span>7017 123 456</span>
+        <span>Роль</span><span>Генеральный подрядчик</span>
+        <span>Сумма</span><span class="big">${rub(4800000)}</span>
+        <span>Форма</span><span>цифровые рубли, смарт-контракт</span></div></div>
+      <div class="card"><h3>Правила смарт-контракта</h3><ul class="rules">
+        <li>Платежи только по статьям утверждённой сметы</li>
+        <li>Не больше лимита каждой статьи</li>
+        <li>Получатель проверяется по открытым данным ФНС</li>
+        <li>Перевод на личные карты — не больше 100 000 ₽</li>
+        <li>Правила переходят на каждого субподрядчика</li></ul></div>
+    </div>
+    <div class="card fade" id="sign"><button class="btn" id="go">Подписать и перевести</button> <span class="muted" style="margin-left:10px">Подписание усиленной электронной подписью</span></div>`;
+  await press($('#go'), 3200);
+  $('#sign').innerHTML = `<div class="ok-banner fade">Смарт-контракт SC-2026-0412 активирован · 4 800 000 ₽ зачислены на кошелёк ООО «СтройМонтаж»</div>`;
+  await beat(2200);
+}
+
+/* ---------- 4. Контроль платежей ---------- */
+const state = {paid: 1680000, stop: 0, recipients: 11};
+const nodes = [
+  {id: 'cust', x: 4, y: 150, t: 'Заказчик', s: 'ГКУ «УКС»', st: 'root'},
+  {id: 'gen', x: 196, y: 150, t: 'ООО «СтройМонтаж»', s: 'генподрядчик · 4,8 млн', st: 'ok', from: 'cust'},
+  {id: 'seed', x: 388, y: 20, t: '11 получателей', s: 'ранее · 1,68 млн ₽', st: 'ok', from: 'gen'},
+];
+function drawGraph(newId){
+  const pos = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const col = st => st === 'bad' ? '#c62828' : st === 'root' ? '#1d4ed8' : '#15803d';
+  const fill = st => st === 'bad' ? '#fdecec' : st === 'root' ? '#e8efff' : '#e7f6ec';
+  let edges = '', boxes = '';
+  for (const n of nodes){
+    if (n.from){ const a = pos[n.from], x1 = a.x + 168, y1 = a.y + 22, x2 = n.x, y2 = n.y + 22, mx = (x1 + x2) / 2;
+      edges += `<path d="M${x1} ${y1}C${mx} ${y1} ${mx} ${y2} ${x2 - 6} ${y2}" fill="none" stroke="${col(n.st)}" stroke-width="1.6" ${n.st === 'bad' ? 'stroke-dasharray="5 4"' : ''} marker-end="url(#a-${n.st === 'bad' ? 'bad' : 'ok'})"/>`;
+      if (n.st === 'bad') edges += `<text x="${x2 - 22}" y="${y2 - 6}" font-size="14" font-weight="700" fill="#c62828">✕</text>`; }
+    boxes += `<g class="node ${n.id === newId ? 'appear' : ''}"><rect x="${n.x}" y="${n.y}" width="168" height="44" rx="8" fill="${fill(n.st)}" stroke="${col(n.st)}" stroke-width="1.3"/>
+      <text x="${n.x + 10}" y="${n.y + 18}" font-size="13" font-weight="600" fill="#0f1b2d">${n.t}</text>
+      <text x="${n.x + 10}" y="${n.y + 34}" font-size="11.5" fill="#5f6b7d">${n.s}</text></g>`;
+  }
+  $('#graph').innerHTML = `<svg viewBox="0 0 756 334"><defs>
+    <marker id="a-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#15803d"/></marker>
+    <marker id="a-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c62828"/></marker></defs>
+    <text x="196" y="326" font-size="11.5" fill="#5f6b7d">1-е звено</text><text x="388" y="326" font-size="11.5" fill="#5f6b7d">2-е звено</text><text x="580" y="326" font-size="11.5" fill="#5f6b7d">3-е звено</text>
+    ${edges}${boxes}</svg>`;
+}
+function drawKpis(){
+  $('#kpis').innerHTML = `
+    <div class="card kpi good"><div class="l">Проведено</div><div class="v">${mln(state.paid)}</div></div>
+    <div class="card kpi bad"><div class="l">Остановлено</div><div class="v">${mln(state.stop)}</div></div>
+    <div class="card kpi"><div class="l">Получателей</div><div class="v">${state.recipients}</div></div>
+    <div class="card kpi"><div class="l">Остаток у генподрядчика</div><div class="v">${mln(4800000 - state.paid)}</div></div>`;
+}
+let clock = 10 * 60 + 12;
+function event(kind, text){
+  const t = `${String(Math.floor(clock / 60)).padStart(2, '0')}:${String(clock % 60).padStart(2, '0')}`; clock += 7;
+  const c = kind === 'bad' ? '#c62828' : kind === 'warn' ? '#b45309' : '#15803d';
+  $('#feed').insertAdjacentHTML('afterbegin', `<div class="ev fade"><span class="t">${t}</span><span class="dot" style="background:${c}"></span><span>${text}</span></div>`);
+}
+
+const PAYMENTS = [
+  {cap: '<b>Проверка платежа.</b> Генподрядчик платит поставщику кирпича — статья, лимит и получатель в порядке', node: {id: 'brick', x: 388, y: 80, t: 'ООО «КирпичТорг»', s: 'материалы · 620 тыс. ₽'}, from: 'gen', level: '2-е звено',
+   to: 'ООО «КирпичТорг»', inn: 'ИНН 7014 552 019', amount: 620000, item: 'mat',
+   checks: [['Статья сметы «Материалы»', 1], ['Лимит статьи: останется 330 000 ₽', 1], ['ФНС: работает с 2014 года, отчётность сдана', 1], ['Не вывод на личные карты', 1]],
+   ok: 'Платёж проведён'},
+  {cap: 'Платёж фирме, созданной <b>14 дней назад</b> по массовому адресу, — блокировка с объяснением до того, как деньги ушли', node: {id: 'vector', x: 388, y: 140, t: 'ООО «Вектор»', s: 'остановлено · 400 тыс. ₽'}, from: 'gen', level: '2-е звено',
+   to: 'ООО «Вектор»', inn: 'ИНН 7017 998 341', amount: 400000, item: 'mat',
+   checks: [['Статья сметы «Материалы»', 1], ['Лимит статьи', 1], ['ФНС: зарегистрировано 18.10.2026, массовый адрес, нет отчётности', 0], ['Не вывод на личные карты', 1]],
+   bad: 'Получатель имеет признаки фирмы-однодневки: дата регистрации 18.10.2026 (14 дней), адрес массовой регистрации, нет бухгалтерской отчётности.', exception: true},
+  {cap: 'Попытка вывести <b>2 млн ₽ на карту директора</b> подрядчика — правило против обнала срабатывает автоматически', node: {id: 'card', x: 388, y: 200, t: 'Карта Петрова И.И.', s: 'остановлено · 2 млн ₽'}, from: 'gen', level: '2-е звено',
+   to: 'Петров И.И., директор ООО «СтройМонтаж»', inn: 'карта ****4417', amount: 2000000, item: 'pay',
+   checks: [['Статья сметы «Оплата труда»', 1], ['Лимит статьи', 1], ['Получатель — физлицо, связанное с подрядчиком', 1], ['Перевод на личную карту: 2 000 000 ₽ при лимите 100 000 ₽', 0]],
+   bad: 'Перевод на личную карту превышает лимит смарт-контракта в 20 раз. Зарплата бригадам выплачивается через зарплатный проект, а не на карту директора.'},
+  {cap: 'Генподрядчик платит субподрядчику — <b>правила смарт-контракта переходят</b> на следующее звено', node: {id: 'elec', x: 388, y: 260, t: 'ООО «ЭлектроСервис»', s: 'субподряд · 800 тыс. ₽'}, from: 'gen', level: '2-е звено',
+   to: 'ООО «ЭлектроСервис»', inn: 'ИНН 7017 310 775', amount: 800000, item: 'sub',
+   checks: [['Статья сметы «Субподряд»', 1], ['Лимит статьи: 800 000 из 800 000 ₽', 1], ['ФНС: работает с 2011 года, отчётность сдана', 1], ['Не вывод на личные карты', 1]],
+   ok: 'Платёж проведён · правила SC-2026-0412 унаследованы субподрядчиком'},
+  {cap: 'Контроль доходит <b>до последнего звена</b>: субподрядчик закупает кабель по тем же правилам', node: {id: 'cable', x: 580, y: 260, t: 'ООО «КабельОпт»', s: 'материалы · 310 тыс. ₽'}, from: 'elec', level: '3-е звено', sub: true,
+   to: 'ООО «КабельОпт»', inn: 'ИНН 5405 118 260', amount: 310000,
+   checks: [['Правила унаследованы от SC-2026-0412', 1], ['Статья субподрядной сметы «Материалы»', 1], ['ФНС: работает с 2009 года, отчётность сдана', 1], ['Не вывод на личные карты', 1]],
+   ok: 'Платёж проведён на 3-м звене'},
+];
+
+async function dashboard(){
+  nav('dash');
+  main.innerHTML = header('Ремонт школы № 12', 'Контракт 4,8 млн ₽ · смарт-контракт SC-2026-0412 · генподрядчик ООО «СтройМонтаж»') + `
+    <div class="kpis fade" id="kpis"></div>
+    <div class="dash fade"><div class="col"><div class="card"><h3>Граф движения денег</h3><div id="graph"></div></div></div>
+      <div class="col"><div class="card" id="pay"><h3>Проверка платежа</h3><div class="muted">Ожидаем платежи подрядчиков…</div></div>
+      <div class="card feed"><h3>События</h3><div id="feed"></div></div></div></div>`;
+  drawKpis(); drawGraph();
+  event('good', 'Смарт-контракт SC-2026-0412 активирован, 4,8 млн ₽ у генподрядчика');
+  caption('Шаг 3', 'Заказчик в реальном времени видит <b>граф денег</b> по всей цепочке подрядчиков');
+  await beat(2600);
+
+  for (const p of PAYMENTS){
+    caption('Шаг 3', p.cap);
+    const pay = $('#pay');
+    pay.innerHTML = `<h3>Проверка платежа · ${p.level}</h3><div class="pay-head fade"><div><b>${p.to}</b><div class="muted">${p.inn}</div></div><div class="amt">${rub(p.amount)}</div></div><div class="check" id="chk"></div><div id="res"></div>`;
+    await sleep(AUTO ? 900 : 400);
+    for (const [txt, okc] of p.checks){
+      const row = document.createElement('div'); row.innerHTML = `<span class="ic"><span class="spin"></span></span><span>${txt}</span>`;
+      $('#chk').appendChild(row); await sleep(AUTO ? 650 : 400);
+      row.querySelector('.ic').innerHTML = okc ? '<span style="color:var(--good)">✓</span>' : '<span style="color:var(--bad)">✕</span>';
+      if (!okc) row.style.color = 'var(--bad)';
+    }
+    await sleep(400);
+    if (p.ok){
+      $('#res').innerHTML = `<div class="verdict good fade">✓ ${p.ok}</div>`;
+      if (!p.sub){ state.paid += p.amount; BUDGET.find(b => b.key === p.item).paid += p.amount; }
+      state.recipients += 1;
+      nodes.push({...p.node, st: 'ok', from: p.from});
+      event('good', `Проведён платёж ${rub(p.amount)}: ${p.to}`);
+    } else {
+      $('#res').innerHTML = `<div class="verdict bad fade">✕ Платёж заблокирован<div class="why">${p.bad}</div></div>`;
+      state.stop += p.amount; BUDGET.find(b => b.key === p.item).stop += p.amount;
+      nodes.push({...p.node, st: 'bad', from: p.from});
+      event('bad', `Остановлен платёж ${rub(p.amount)}: ${p.to}`);
+    }
+    drawKpis(); drawGraph(p.node.id);
+    if (p.exception){
+      await sleep(AUTO ? 1800 : 300);
+      caption('Шаг 3', 'Заказчик получает алерт и сам решает: <b>одобрить исключение</b> или оставить блокировку');
+      $('#res').insertAdjacentHTML('beforeend', `<div class="actions fade"><button class="btn ghost" id="exc">Одобрить исключение</button><button class="btn danger" id="keep">Оставить блокировку</button></div>`);
+      event('warn', 'Алерт заказчику: нужен ваш ответ по ООО «Вектор»');
+      await press($('#keep'), 2400);
+      $('#res .actions').outerHTML = `<div class="muted fade" style="margin-top:8px">Блокировка подтверждена заказчиком · подрядчику отправлено объяснение</div>`;
+      event('warn', 'Заказчик оставил блокировку, подрядчик уведомлён');
+    }
+    await beat(AUTO ? 3800 : 0);
+  }
+}
+
+/* ---------- 5. Отчёт ---------- */
+async function report(){
+  caption('Шаг 4', '<b>Прозрачность.</b> Готовый отчёт об исполнении контракта — без ручного аудита');
+  nav('report');
+  const rows = BUDGET.map(b => `<tr><td>${b.name}</td><td class="num">${rub(b.limit)}</td><td class="num">${rub(b.paid)}</td><td class="num" style="color:${b.stop ? 'var(--bad)' : 'inherit'}">${b.stop ? rub(b.stop) : '—'}</td><td class="num">${Math.round(b.paid / b.limit * 100)}%</td></tr>`).join('');
+  const sum = k => BUDGET.reduce((s, b) => s + b[k], 0);
+  main.innerHTML = header('Отчёт об исполнении контракта', 'Ремонт школы № 12 · на 1 ноября 2026') + `
+    <div class="kpis fade">
+      <div class="card kpi good"><div class="l">Проведено проверенным получателям</div><div class="v">${mln(state.paid)}</div></div>
+      <div class="card kpi bad"><div class="l">Остановлено до списания</div><div class="v">${mln(state.stop)}</div></div>
+      <div class="card kpi"><div class="l">Получателей проверено</div><div class="v">${state.recipients + 2}</div></div>
+      <div class="card kpi"><div class="l">Звеньев цепочки</div><div class="v">3</div></div></div>
+    <div class="card fade"><h3>Исполнение по статьям сметы</h3><table>
+      <tr><th>Статья</th><th class="num">Лимит</th><th class="num">Проведено</th><th class="num">Остановлено</th><th class="num">Освоено</th></tr>${rows}
+      <tr><th>Итого</th><th class="num">${rub(sum('limit'))}</th><th class="num">${rub(sum('paid'))}</th><th class="num">${rub(sum('stop'))}</th><th class="num">${Math.round(sum('paid') / sum('limit') * 100)}%</th></tr></table>
+      <div class="actions"><button class="btn" id="pdf">Выгрузить отчёт</button><button class="btn ghost">Выгрузка для финмониторинга (115-ФЗ)</button></div></div>`;
+  await press($('#pdf'), 3000);
+  toast('Отчёт сформирован: Отчёт_SC-2026-0412.pdf');
+  await sleep(1500);
+  caption('ЦифроКонтроль', 'Каждый целевой рубль — <b>до последнего исполнителя</b>. Ищем регионального заказчика для пилота вместе с ВТБ');
+  await sleep(AUTO ? 4500 : 0);
+}
+
+(async () => {
+  await login(); await smeta(); await fund(); await dashboard(); await report();
+  window.__done = true;
+  if (!AUTO){ const b = $('#next'); b.textContent = 'Сначала ↺'; b.style.display = ''; b.onclick = () => location.reload(); }
+})();
+</script>
+</body>
+</html>
