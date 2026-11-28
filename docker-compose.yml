@@ -1,5 +1,5 @@
 # Общий запуск микросервисов SmartRuble.
-# Снаружи доступен только api-gateway (порт 8080), остальные сервисы — внутри сети docker.
+# Локальный стенд: web 3000, gateway 8080, PostgreSQL для pgAdmin 5433/5434.
 #   docker compose up --build
 services:
   auth-db:
@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: auth
       POSTGRES_PASSWORD: auth
     ports:
-      - "5433:5432"          # для pgAdmin; 5432 занят локальным PostgreSQL
+      - "127.0.0.1:5433:5432"          # для pgAdmin; 5432 занят локальным PostgreSQL
     volumes:
       - auth-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -39,7 +39,7 @@ services:
       POSTGRES_USER: billing
       POSTGRES_PASSWORD: billing
     ports:
-      - "5434:5432"          # для pgAdmin
+      - "127.0.0.1:5434:5432"          # для pgAdmin
     volumes:
       - billing-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -58,7 +58,104 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://billing-db:5432/billing_db
       SPRING_DATASOURCE_USERNAME: billing
       SPRING_DATASOURCE_PASSWORD: billing
+      BANK_URL: http://abs-service:8083
+      BANK_KEY: ${BANK_KEY:-local-demo-bank-key}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EVENTS_ENABLED: "true"
     # порт наружу не публикуем — доступ только через api-gateway
+
+  bank-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bank_db
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+    volumes:
+      - bank-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bank -d bank_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  abs-service:
+    build: ./abs-service
+    depends_on:
+      bank-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://bank-db:5432/bank_db
+      DB_USERNAME: bank
+      DB_PASSWORD: bank
+      BANK_KEY: ${BANK_KEY:-local-demo-bank-key}
+
+  kafka-init:
+    image: alpine:3.21
+    user: "0:0"
+    command: ["chown", "1000:1000", "/data"]
+    volumes:
+      - kafka-data:/data
+
+  kafka:
+    image: apache/kafka:3.9.1
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  notification-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notification_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  notification-service:
+    build: ./notification-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      notification-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://notification-db:5432/notification_db
+      DB_USERNAME: notification
+      DB_PASSWORD: notification
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  web-client:
+    build: ./web-client
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api-gateway
 
   api-gateway:
     build: ./api-gateway
@@ -72,8 +169,11 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ISSUER: ${JWT_ISSUER}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
 volumes:
   auth-db-data:
   billing-db-data:
+  bank-db-data:
+  notification-db-data:
+  kafka-data:

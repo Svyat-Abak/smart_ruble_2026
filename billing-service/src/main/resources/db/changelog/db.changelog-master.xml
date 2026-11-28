@@ -9,4 +9,5 @@
          Схема описана в docs/BILLING_DATABASE.md. Подключайте новые файлы в конец списка. -->
 
     <include file="db/changelog/counterparties/001-create-counterparties.xml"/>
+    <include file="db/changelog/mvp/002-workflow.sql"/>
 </databaseChangeLog>

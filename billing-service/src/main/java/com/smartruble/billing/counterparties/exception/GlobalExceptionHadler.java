@@ -35,6 +35,11 @@ public class GlobalExceptionHadler {
         return error(HttpStatus.BAD_REQUEST, "Ошибка валидации", request, fields);
     }
 
+    @ExceptionHandler(InvalidRequisite.class)
+    public ResponseEntity<ApiError> handleRequisite(InvalidRequisite ex, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request, Map.of(ex.getField(), ex.getMessage()));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
         for (Throwable cause = ex; cause != null; cause = cause.getCause()) {

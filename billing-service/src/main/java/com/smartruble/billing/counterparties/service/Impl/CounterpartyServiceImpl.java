@@ -1,5 +1,7 @@
 package com.smartruble.billing.counterparties.service.Impl;
 
+import com.smartruble.billing.counterparties.VerificationStatus;
+
 import com.smartruble.billing.counterparties.entity.*;
 import com.smartruble.billing.counterparties.repository.CounterpartyRepository;
 import com.smartruble.billing.counterparties.repository.CounterpartyStatusHistoryRepository;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import com.smartruble.billing.counterparties.exception.InvalidRequisite;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +35,7 @@ public class CounterpartyServiceImpl implements CounterpartyService {
     @Override
     @Transactional
     public CounterpartyResponse create(CreateCounterpartyRequest request, UUID userId) {
-        validateBusinessRules(request, userId);
+        validateRequisites(request.getType(), request.getInn(), request.getKpp(), request.getOgrn());
 
         if (counterpartyRepository.existsByInnAndKpp(request.getInn(), request.getKpp())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot create counterparty because counterparty already exists");
@@ -43,19 +46,14 @@ public class CounterpartyServiceImpl implements CounterpartyService {
                 .name(request.getName())
                 .inn(request.getInn())
                 .kpp(request.getKpp())
-                .contactEmail(request.getEmail())
+                .shortName(request.getShortName()).legalAddress(request.getLegalAddress())
+                .ogrn(request.getOgrn()).contactPhone(request.getContactPhone())
+                .contactEmail(request.getContactEmail())
                 .verificationStatus(VerificationStatus.NEW)
                 .createdBy(userId)
                 .build();
 
         counterparty = counterpartyRepository.save(counterparty);
-
-//        CounterpartyStatusHistory history = new CounterpartyStatusHistory();
-//        history.setCounterparty(counterparty);
-//        history.getOldStatus(null);
-//        history.setNewStatus(VerificationStatus.NEW);
-//        history.setSource(StatusChangeSource.MANUAL);
-//        history.setChangedBy(userId);
 
         CounterpartyStatusHistory history = CounterpartyStatusHistory.builder()
                 .counterparty(counterparty)
@@ -71,21 +69,20 @@ public class CounterpartyServiceImpl implements CounterpartyService {
     }
 
 
-    private void validateBusinessRules(CreateCounterpartyRequest request, UUID userId) {
-        String type = request.getType().name();
-        String inn = request.getInn();
-//        String name = request.getName();
-        String kpp = request.getKpp();
-//        String email = request.getEmail();
-
-        if (request.getType() == CounterpartyType.LEGAL_ENTITY && inn.length() != 10) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ИНН юридического лица должен состоять из 10 цифр");
+    private void validateRequisites(CounterpartyType type, String inn, String kpp, String ogrn) {
+        if (!com.smartruble.billing.counterparties.service.InnValidator.valid(inn)) {
+            throw new InvalidRequisite("inn", "Неверная контрольная сумма ИНН");
         }
-        if (("INDIVIDUAL_ENTREPRENEUR".equals(type) || "SELF_EMPLOYED".equals(type)) && inn.length() != 12) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ИНН ИП или самозанятого должен состоять из 12 цифр");
+        boolean company = type == CounterpartyType.LEGAL_ENTITY;
+        if (inn.length() != (company ? 10 : 12)) {
+            throw new InvalidRequisite("inn", company ? "ИНН юридического лица должен содержать 10 цифр"
+                    : "ИНН ИП или самозанятого должен содержать 12 цифр");
         }
-        if (!"LEGAL_ENTITY".equals(type) && kpp != null && !kpp.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "КПП может быть указан только для юридических лиц");
+        if (!company && kpp != null) {
+            throw new InvalidRequisite("kpp", "КПП может быть указан только для юридических лиц");
+        }
+        if (ogrn != null && (type == CounterpartyType.SELF_EMPLOYED || ogrn.length() != (company ? 13 : 15))) {
+            throw new InvalidRequisite("ogrn", "ОГРН не соответствует типу контрагента");
         }
     }
 
@@ -140,12 +137,7 @@ public class CounterpartyServiceImpl implements CounterpartyService {
     @Transactional
     public CounterpartyResponse update(UUID id, UpdateRequest request) {
         Counterparty counterparty = lock(id);
-        if (counterparty.getType() != CounterpartyType.LEGAL_ENTITY && request.kpp() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "КПП может быть указан только для юридических лиц");
-        }
-        if (counterparty.getType() == CounterpartyType.SELF_EMPLOYED && request.ogrn() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "У самозанятого не должно быть ОГРН");
-        }
+        validateRequisites(counterparty.getType(), counterparty.getInn(), request.kpp(), request.ogrn());
         if (!Objects.equals(counterparty.getKpp(), request.kpp())
                 && counterpartyRepository.existsByInnAndKpp(counterparty.getInn(), request.kpp())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Контрагент с таким ИНН и КПП уже существует");
@@ -236,6 +228,9 @@ public class CounterpartyServiceImpl implements CounterpartyService {
         Counterparty counterparty = lock(id);
         if (counterparty.getVerificationStatus() == VerificationStatus.BLOCKED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Контрагент заблокирован");
+        }
+        if (memberRepository.existsById(new CounterpartyMemberId(id, memberId))) {
+            return; // Retrying the same membership command is safe.
         }
         if (memberRepository.existsByIdUserId(memberId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Пользователь уже привязан к контрагенту");

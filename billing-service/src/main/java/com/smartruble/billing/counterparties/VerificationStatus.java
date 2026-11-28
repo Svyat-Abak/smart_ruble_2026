@@ -1,4 +1,4 @@
-package com.smartruble.billing.counterparties.entity;
+package com.smartruble.billing.counterparties;
 
 public enum VerificationStatus {
     NEW,         // заведён, ещё не проверен

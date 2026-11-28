@@ -1,7 +1,7 @@
 package com.smartruble.billing.counterparties.repository;
 
 import com.smartruble.billing.counterparties.entity.Counterparty;
-import com.smartruble.billing.counterparties.entity.VerificationStatus;
+import com.smartruble.billing.counterparties.VerificationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

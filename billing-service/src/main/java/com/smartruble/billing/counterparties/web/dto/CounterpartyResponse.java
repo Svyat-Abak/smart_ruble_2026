@@ -3,7 +3,7 @@ package com.smartruble.billing.counterparties.web.dto;
 
 import com.smartruble.billing.counterparties.entity.Counterparty;
 import com.smartruble.billing.counterparties.entity.CounterpartyType;
-import com.smartruble.billing.counterparties.entity.VerificationStatus;
+import com.smartruble.billing.counterparties.VerificationStatus;
 
 import java.time.Instant;
 import java.util.UUID;

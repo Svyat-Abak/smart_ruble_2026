@@ -3,7 +3,7 @@ package com.smartruble.billing.counterparties.web.dto;
 import com.smartruble.billing.counterparties.entity.CounterpartyBankAccount;
 import com.smartruble.billing.counterparties.entity.CounterpartyStatusHistory;
 import com.smartruble.billing.counterparties.entity.StatusChangeSource;
-import com.smartruble.billing.counterparties.entity.VerificationStatus;
+import com.smartruble.billing.counterparties.VerificationStatus;
 import jakarta.validation.constraints.*;
 
 import java.time.Instant;

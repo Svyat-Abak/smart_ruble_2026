@@ -3,7 +3,7 @@ package com.smartruble.billing.counterparties.web.controller;
 import com.smartruble.billing.counterparties.service.CounterpartyService;
 import com.smartruble.billing.counterparties.web.dto.CounterpartyResponse;
 import com.smartruble.billing.counterparties.web.dto.CreateCounterpartyRequest;
-import com.smartruble.billing.counterparties.entity.VerificationStatus;
+import com.smartruble.billing.counterparties.VerificationStatus;
 import com.smartruble.billing.counterparties.web.dto.CounterpartyOperations.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

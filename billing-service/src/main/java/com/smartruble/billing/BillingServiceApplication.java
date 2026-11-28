@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * (counterparties, workorders, payments, rules, approvals, reporting). Границы модулей проверяет ModularityTests.
  * Декомпозиция: docs/BILLING_DECOMPOSITION.md
  */
+@org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 public class BillingServiceApplication {
 

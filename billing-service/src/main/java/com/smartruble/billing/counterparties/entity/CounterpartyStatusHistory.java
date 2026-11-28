@@ -1,5 +1,7 @@
 package com.smartruble.billing.counterparties.entity;
 
+import com.smartruble.billing.counterparties.VerificationStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

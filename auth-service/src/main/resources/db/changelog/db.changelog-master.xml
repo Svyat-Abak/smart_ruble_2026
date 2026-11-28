@@ -7,4 +7,5 @@
 
     <include file="db/changelog/1.0/001-create-tables.xml"/>
     <include file="db/changelog/1.0/002-insert-roles.xml"/>
+    <include file="db/changelog/1.0/003-contractor-role.xml"/>
 </databaseChangeLog>

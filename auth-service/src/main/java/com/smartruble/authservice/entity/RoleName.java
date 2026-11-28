@@ -9,5 +9,6 @@ public enum RoleName {
     ROLE_EMPLOYEE,
     ROLE_MANAGER,
     ROLE_FINANCE_DIRECTOR,
+    ROLE_CONTRACTOR,
     ROLE_ADMIN
 }

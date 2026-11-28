@@ -99,9 +99,15 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(put("/api/v1/admin/users/" + userId + "/roles")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"roles\":[\"ROLE_MANAGER\",\"ROLE_FINANCE_DIRECTOR\"]}"))
+                        .content("{\"roles\":[\"ROLE_CONTRACTOR\",\"ROLE_FINANCE_DIRECTOR\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.roles", hasItem("ROLE_FINANCE_DIRECTOR")));
+
+        String token = postJson("/api/v1/auth/login",
+                "{\"phoneNumber\":\"+79005556677\",\"password\":\"password123\"}", 200).get("accessToken").asText();
+        mockMvc.perform(get("/api/v1/auth/validate").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.roles", hasItem("ROLE_CONTRACTOR")));
 
         mockMvc.perform(patch("/api/v1/admin/users/" + userId + "/status")
                         .header("Authorization", "Bearer " + adminToken)

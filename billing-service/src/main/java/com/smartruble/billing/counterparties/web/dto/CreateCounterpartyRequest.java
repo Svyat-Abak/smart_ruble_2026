@@ -1,39 +1,31 @@
 package com.smartruble.billing.counterparties.web.dto;
 
-
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.smartruble.billing.counterparties.entity.CounterpartyType;
-import com.smartruble.billing.counterparties.entity.StatusChangeSource;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.spi.ToolProvider;
 
 @Getter
 @Setter
 public class CreateCounterpartyRequest {
     @NotNull
-    @Enumerated(EnumType.STRING)
     private CounterpartyType type;
-
-    @NotBlank
+    @NotBlank @Size(max = 255)
     private String name;
-
-    @NotBlank
-    @Pattern(regexp = "^(\\d{10}|\\d{12})$")
+    @Size(max = 255)
+    private String shortName;
+    @NotBlank @Pattern(regexp = "[0-9]{10}|[0-9]{12}")
     private String inn;
-
-    @Pattern(regexp = "^\\d{9}$")
+    @Pattern(regexp = "[0-9]{4}[A-Z0-9]{2}[0-9]{3}")
     private String kpp;
-
-    @Email
-    private String email;
-
-
+    @Pattern(regexp = "[0-9]{13}|[0-9]{15}")
+    private String ogrn;
+    @Size(max = 500)
+    private String legalAddress;
+    @JsonAlias("email")
+    @Email @Size(max = 100)
+    private String contactEmail;
+    @Size(max = 20)
+    private String contactPhone;
 }

@@ -1,0 +1,17 @@
+# Explicitly enables local demonstration accounts.
+services:
+  auth-service:
+    environment:
+      APP_DEMO_ENABLED: "true"
+  demo-tools:
+    image: python:3.12-alpine
+    profiles: [tools]
+    working_dir: /demo
+    volumes:
+      - ./demo:/demo:ro
+    environment:
+      GATEWAY_URL: http://api-gateway:8080
+      BANK_URL: http://abs-service:8083
+      BANK_KEY: ${BANK_KEY:-local-demo-bank-key}
+    entrypoint: [python, run.py]
+    command: [seed]

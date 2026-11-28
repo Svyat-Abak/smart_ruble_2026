@@ -1,6 +1,6 @@
 package com.smartruble.billing.counterparties.service;
 
-import com.smartruble.billing.counterparties.entity.VerificationStatus;
+import com.smartruble.billing.counterparties.VerificationStatus;
 import com.smartruble.billing.counterparties.web.dto.CounterpartyResponse;
 import com.smartruble.billing.counterparties.web.dto.CreateCounterpartyRequest;
 import org.springframework.data.domain.Page;
